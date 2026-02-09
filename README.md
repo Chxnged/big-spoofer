@@ -3,7 +3,7 @@
 A comprehensive FiveM Spoofer, Cleaner, and Utility tool built with WPF (C#). 
 Designed to help users troubleshoot and reset their FiveM environment with a modern, cyberpunk-inspired UI.
 
-![Screenshot]([https://via.placeholder.com/800x450.png?text=BigSpoofer+UI](https://github.com/Chxnged/big-spoofer/blob/main/%7B05A419F5-6E5A-4D7B-BF05-6D575E88BD16%7D.png?raw=true)
+![Screenshot](https://github.com/Chxnged/big-spoofer/blob/main/%7B05A419F5-6E5A-4D7B-BF05-6D575E88BD16%7D.png?raw=true)
 
 ## ✨ Features
 
