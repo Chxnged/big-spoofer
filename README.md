@@ -20,7 +20,7 @@ Designed to help users troubleshoot and reset their FiveM environment with a mod
 
 ## 🛠️ Installation
 
-1. Download the latest `BigSpoofer.exe` from the [Releases](https://github.com/Chxngd/Big-Spoofer/releases) page.
+1. Download the latest `BigSpoofer.exe` from the [Releases](https://github.com/Chxnged/big-spoofer/releases) page.
 2. Run the executable as **Administrator**.
    - *Note: Administrator privileges are required to perform registry edits and file deletions.*
 
