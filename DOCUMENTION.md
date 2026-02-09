@@ -1,62 +1,72 @@
 # BigSpoofer Technical Documentation
 
-## Overview
-BigSpoofer is a WPF-based Windows application developed in C# (.NET 9.0). It provides utilities for managing FiveM installations, including cleaning cache, spoofing hardware identifiers (via registry), and unlinking accounts.
+This document provides technical details about the architecture, core logic, and implementation of BigSpoofer.
 
-## Project Structure
-- **BigSpoofer.csproj**: Project configuration file. Defines dependencies, build target (WinExe), and single-file publish settings.
-- **MainWindow.xaml**: The main UI definition using XAML. Contains the layout, styles, animations, and control templates.
-- **MainWindow.xaml.cs**: The code-behind logic. Handles button clicks, executes batch commands, performs file operations, and manages application state.
-- **CustomMessageBox.xaml**: A custom-styled popup window that replaces the standard Windows MessageBox.
-- **app.manifest**: Application manifest file ensuring the app runs with Administrator privileges (`requireAdministrator`).
+## 🏗️ Architecture
 
-## Key Components
+BigSpoofer is a WPF (Windows Presentation Foundation) application built with .NET 9.0. It follows a single-window architecture with a modular UI based on `Grid` visibility toggling.
 
-### 1. UI Architecture
-- **Navigation**: Uses a `RadioButton` based sidebar for switching between views (`ActionGrid`, `SettingsGrid`, `UnlinkGrid`, `UninstallGrid`).
-- **Styling**: Custom styles for buttons (`MenuButton`, `ActionButton`, `DiscordActionButton`), text boxes, and scrollbars are defined in `Window.Resources`.
+### Core Components
+- **MainWindow.xaml**: Defines the UI layout, animations, and themes.
+- **MainWindow.xaml.cs**: Contains the core logic for button clicks, batch execution, and UI updates.
+- **CustomMessageBox.xaml**: A custom-styled popup window for alerts and confirmations.
+- **App.xaml**: Application entry point and global resource management.
+
+## ⚙️ Core Logic
+
+### 1. Batch Execution Engine
+The application embeds batch scripts as string constants within the code. When an action is triggered:
+1. The script content is written to a temporary `.bat` file.
+2. The file is executed using `Process.Start` with `Verb = "runas"` to ensure Administrator privileges.
+3. The process runs in a hidden window (`CreateNoWindow = true`).
+4. The temporary file is deleted after execution.
+
+### 2. Version Control System
+- **Source**: The application checks for updates by fetching a raw text file from Pastebin.
+- **URL**: `https://pastebin.com/raw/M1FS7Ct6`
+- **Logic**:
+  - Compares the remote version string with the local `CurrentVersion` constant.
+  - If they differ, a `CustomMessageBox` alerts the user, and the application shuts down to force an update.
+
+### 3. Modules
+
+#### A. Spoofing
+Targeted Registry Keys Deleted:
+- `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MSLicensing`
+- `HKEY_CURRENT_USER\Software\WinRAR\ArcHistory`
+- `HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\bam\State\UserSettings`
+- `HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FeatureUsage`
+- `HKEY_CLASSES_ROOT\Local Settings\Software\Microsoft\Windows\Shell\MuiCache`
+
+#### B. Deep Cleaning
+Files and Directories Removed:
+- `%Temp%`, `C:\Windows\Temp`, `C:\Windows\Prefetch`
+- FiveM Cache Files: `citizen-shader-cache`, `adhesive.dll`, `profiles.dll`
+- Browser Cache (Chrome, Edge, Firefox)
+
+#### C. Unlinking
+- **Discord**: Renames `discord_rpc` module to break the link.
+- **Rockstar**: Deletes `DigitalEntitlements` folder.
+- **CitizenFX**: Deletes `%AppData%\CitizenFX` folder.
+
+#### D. Uninstall
+- Kills all FiveM-related processes.
+- Removes the main FiveM installation directory (`%LocalAppData%\FiveM`).
+- Deletes desktop shortcuts.
+
+## 🎨 UI & Theming
+
+The application uses a dynamic resource dictionary system for theming.
+- **Themes**: Defined in `ApplyTheme` method.
+- **Resources**: Brushes (`BgDarkBrush`, `AccentPrimaryBrush`, etc.) are updated at runtime.
 - **Animations**: Uses `DoubleAnimation` and `ThicknessAnimation` for smooth transitions between views.
 
-### 2. Core Functions (`MainWindow.xaml.cs`)
+## 🔒 Security & Requirements
 
-#### Spoofing & Cleaning
-The application uses embedded batch scripts (`SpoofBatch`, `CleanBatch`, etc.) executed via `RunBatchAsync`.
-- **Mechanism**: Creates a temporary `.bat` file in the temp directory, executes it with `cmd.exe`, and then deletes it.
-- **Operations**:
-  - Deletes registry keys in `HKLM` and `HKCU`.
-  - Clears Windows temp folders (`%temp%`, `prefetch`).
-  - Removes FiveM specific cache files (`CitizenFX`, `DigitalEntitlements`).
+- **Administrator Privileges**: Enforced via `app.manifest` (`<requestedExecutionLevel level="requireAdministrator" />`).
+- **Network Access**: Required for version checking and fetching the latest updates.
 
-#### Unlinking
-- **Discord**: Renames/Deletes `discord_rpc.dll` modules.
-- **Rockstar**: Removes `DigitalEntitlements` folder.
-- **CitizenFX**: Deletes the entire `CitizenFX` AppData folder.
+## 📦 Dependencies
 
-#### Uninstall Logic
-- Implemented in `Uninstall_Click`.
-- Generates a robust batch script on the fly.
-- Uses `taskkill` to forcefully close FiveM and Steam processes.
-- Removes `FiveM` directory from `%LocalAppData%` and the Desktop shortcut.
-- Runs with elevated privileges.
-
-### 3. Version Control
-- **Endpoint**: Fetches version string from `https://pastebin.com/raw/M1FS7Ct6`.
-- **Logic**: Compares remote string with local `CurrentVersion` constant.
-- **Behavior**: If versions mismatch, displays a prompt and shuts down the application to enforce updates.
-
-### 4. Build Configuration
-- **Target Framework**: .NET 9.0 Windows
-- **Output**: Single-file executable (`BigSpoofer.exe`).
-- **Optimization**: `IncludeNativeLibrariesForSelfExtract=true`, `DebugType=embedded`.
-
-## Requirements
-- **OS**: Windows 10/11 (64-bit)
-- **Runtime**: .NET 9.0 Desktop Runtime (if not self-contained, but current build is self-contained).
-- **Privileges**: Administrator rights are mandatory.
-
-## Safety & Security
-- **Registry Backups**: The tool *does not* currently create backups before registry editing.
-- **Process Termination**: The tool forcefully terminates processes (`Steam.exe`, `FiveM.exe`) which may result in data loss if games are running.
-
----
-*Documentation generated by chngd*
+- **.NET 9.0 Runtime**: Required to run the application.
+- **System.Text.Json**: Used for saving/loading user settings.
